@@ -1,0 +1,6 @@
+__pycache__
+*.egg-info
+build
+playground.py
+bindings.ts
+reproca_config.ts
