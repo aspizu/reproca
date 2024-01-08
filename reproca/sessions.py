@@ -3,6 +3,7 @@ from __future__ import annotations
 __all__ = ("SESSION_VALID_FOR_DAYS", "Sessions")
 
 import secrets
+from contextlib import suppress
 from datetime import datetime
 from typing import Generic, TypeVar
 import msgspec
@@ -35,18 +36,14 @@ class Sessions(Generic[T, U]):
         return sessionid
 
     def remove_by_userid(self, userid: T) -> None:
-        try:
+        with suppress(KeyError):
             sessionid = self.users.pop(userid)
             self.sessions.pop(sessionid)
-        except KeyError:
-            pass
 
     def remove_by_sessionid(self, sessionid: str) -> None:
-        try:
+        with suppress(KeyError):
             session = self.sessions.pop(sessionid)
             self.users.pop(session.userid)
-        except KeyError:
-            pass
 
     def get_by_userid(self, userid: T) -> U | None:
         if sessionid := self.users.get(userid):
