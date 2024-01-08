@@ -235,9 +235,8 @@ class TypeScriptWriter(Writer):
                 get_origin(obj2) is UnionType
                 and (msgspec.UnsetType in (args := get_args(obj2)))
                 and any(
-                    True
+                    field.default is msgspec.UNSET
                     for field in msgspec.structs.fields(obj)
-                    if field.default is msgspec.UNSET
                 )
             ):
                 args = (arg for arg in args if arg is not msgspec.UnsetType)
