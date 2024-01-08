@@ -1,27 +1,28 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, NamedTuple
 
 if TYPE_CHECKING:
     from datetime import datetime
 
 __all__ = ("Response",)
 
+
+class Cookie(NamedTuple):
+    key: str
+    value: str
+    max_age: int | None
+    expires: datetime | str | int | None
+    path: str
+    domain: str | None
+    secure: bool
+    httponly: bool
+    samesite: Literal["lax", "strict", "none"]
+
+
 class Response:
     def __init__(self) -> None:
-        self.cookies: list[
-            tuple[
-                str,
-                str,
-                int | None,
-                datetime | str | int | None,
-                str,
-                str | None,
-                bool,
-                bool,
-                Literal["lax", "strict", "none"],
-            ]
-        ] = []
+        self.cookies: list[Cookie] = []
         self.headers: dict[str, str] = {}
 
     def set_cookie(
@@ -38,7 +39,7 @@ class Response:
         samesite: Literal["lax", "strict", "none"] = "lax",
     ) -> None:
         self.cookies.append(
-            (
+            Cookie(
                 key,
                 value,
                 max_age,
