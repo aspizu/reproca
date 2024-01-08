@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-__all__ = ["Response"]
-
 from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     from datetime import datetime
 
+__all__ = ("Response",)
 
 class Response:
     def __init__(self) -> None:

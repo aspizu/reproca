@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["SESSION_VALID_FOR_DAYS", "Sessions"]
+__all__ = ("SESSION_VALID_FOR_DAYS", "Sessions")
 
 import secrets
 from datetime import datetime

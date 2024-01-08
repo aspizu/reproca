@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from starlette.middleware import Middleware
     from starlette.types import ExceptionHandler, Lifespan
 
-__all__ = ["Reproca"]
+__all__ = ("Reproca",)
 
 class Method(msgspec.Struct):
     path: str
@@ -170,7 +170,7 @@ class Reproca(Generic[ID, USER]):
         params = [
             (argname, argtype)
             for argname, argtype in ann.items()
-            if argname not in ["return", "request", "response", "session"]
+            if argname not in ("return", "request", "response", "session")
         ]
         payloadtype = msgspec.defstruct("payloadtype", params)
 
