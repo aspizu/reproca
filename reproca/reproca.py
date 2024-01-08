@@ -1,8 +1,4 @@
 from __future__ import annotations
-from reproca.typescript import TypeScriptWriter
-
-__all__ = ["Reproca"]
-
 from importlib.resources import files
 from typing import (
     IO,
@@ -25,6 +21,7 @@ from starlette.requests import Request
 from starlette.routing import BaseRoute, Route
 from reproca.response import Response
 from reproca.sessions import Sessions
+from reproca.typescript import TypeScriptWriter
 from . import resources
 
 if TYPE_CHECKING:
@@ -32,6 +29,7 @@ if TYPE_CHECKING:
     from starlette.middleware import Middleware
     from starlette.types import ExceptionHandler, Lifespan
 
+__all__ = ["Reproca"]
 
 class Method(msgspec.Struct):
     path: str
