@@ -60,7 +60,7 @@ class Writer:
 class TypeScriptWriter(Writer):
     def __init__(self, file: IO[str]) -> None:
         super().__init__(file)
-        self.unresolved: set[type[msgspec.Struct] | TypeAliasType] = set()
+        self.unresolved = set[type[msgspec.Struct] | TypeAliasType]()
         self.resolved = set[object]()
 
     def resolve(self) -> None:
