@@ -41,8 +41,7 @@ class Writer:
         self.file = file
 
     def write(self, *strings: str) -> None:
-        for string in strings:
-            self.file.write(string)
+        self.file.writelines(strings)
 
     def intersperse(
         self, separator: Callable[[], None], callbacks: Iterable[Callable[[], None]]
