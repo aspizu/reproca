@@ -63,10 +63,17 @@ class Reproca(Generic[ID, USER]):
         on_shutdown: Sequence[Callable[[], Any]] | None = None,
         lifespan: Lifespan[Starlette] | None = None,
     ) -> Starlette:
-        routes = list(routes or [])
+        if routes is None:
+            routes = []
+        
+        else:
+            routes = list(routes)
+
         routes.append(Route("/logout", self._logout, methods=["POST"]))
+
         for method in self.methods:
             routes.append(Route(method.path, method.handler, methods=["POST"]))
+
         if debug:
             routes.append(Route("/docs", self._docs, methods=["GET"]))
             routes.append(
@@ -76,6 +83,7 @@ class Reproca(Generic[ID, USER]):
                     methods=["GET"],
                 )
             )
+
         return Starlette(
             debug=debug,
             middleware=middleware,
@@ -87,8 +95,11 @@ class Reproca(Generic[ID, USER]):
         )
 
     def _resource_file(
-        self, path: str, content_type: str = "text/plain"
+        self,
+        path: str,
+        content_type: str = "text/plain"
     ) -> Callable[[Request], Coroutine[Any, Any, starlette.responses.Response]]:
+
         async def handler(_request: Request) -> starlette.responses.Response:
             return starlette.responses.Response(
                 (files(resources) / path).read_text(),
@@ -135,6 +146,7 @@ class Reproca(Generic[ID, USER]):
     async def _logout(self, request: Request) -> starlette.responses.Response:
         if sessionid := request.cookies.get("reproca_session_id"):
             self.sessions.remove_by_sessionid(sessionid)
+
         response = starlette.responses.Response()
         response.delete_cookie(
             "reproca_session_id",
@@ -142,70 +154,93 @@ class Reproca(Generic[ID, USER]):
             httponly=True,
             samesite="strict",
         )
+
         return response
 
     def method(
-        self, func: Callable[PAR, Awaitable[RET]]
+        self,
+        func: Callable[PAR, Awaitable[RET]]
     ) -> Callable[PAR, Awaitable[RET]]:
         ann = get_type_hints(func)
+
         if "return" not in ann:
             msg = f"Return type annotation missing for method {func.__name__}."
             raise SyntaxError(msg)
+
         pass_request = False
+
         if obj := ann.get("request"):
             if obj is not Request:
                 msg = f"Type of request must be {Request} in method {func.__name__}."
                 raise SyntaxError(msg)
             pass_request = True
+
         pass_response = False
+
         if obj := ann.get("response"):
             if obj is not Response:
                 msg = f"Type of response must be {Response} in method {func.__name__}."
                 raise SyntaxError(msg)
+
             pass_response = True
+
         pass_session = False
         pass_session_optional = False
+
         if obj := ann.get("session"):
             pass_session = True
             if get_origin(obj) is Union:
                 pass_session_optional = True
+
         params = [
             (argname, argtype)
             for argname, argtype in ann.items()
             if argname not in ["return", "request", "response", "session"]
         ]
+
         payloadtype = msgspec.defstruct("payloadtype", params)
 
         async def handler(request: Request) -> starlette.responses.Response:
             try:
                 body = msgspec.json.decode(await request.body(), type=payloadtype)
+
             except msgspec.DecodeError:
                 return starlette.responses.Response(status_code=400)
+
             response_params = Response()
             kwargs = {param: getattr(body, param) for param, _ in params}
+
             if pass_request:
                 kwargs["request"] = request
+
             if pass_response:
                 kwargs["response"] = response_params
+
             if pass_session:
                 session = None
                 if sessionid := request.cookies.get("reproca_session_id"):
                     session = self.sessions.get_by_sessionid(sessionid)
+
                 if not pass_session_optional and session is None:
                     return starlette.responses.Response(status_code=401)
+
                 kwargs["session"] = session
+
             body = await func(**kwargs)  # type: ignore
             response = starlette.responses.Response(
                 msgspec.json.encode(body),
                 headers={"Content-Type": "application/json", **response_params.headers},
             )
+
             for cookie in response_params.cookies:
                 response.set_cookie(*cookie)
+
             return response
 
         self.methods.append(
             Method(f"/{func.__name__}", handler, func, params, ann["return"])
         )
+
         return func
 
     def typescript(self, file: IO[str]) -> None:
@@ -216,4 +251,5 @@ class Reproca(Generic[ID, USER]):
         )
         for method in self.methods:
             writer.reproca_method(method)
+
         writer.resolve()

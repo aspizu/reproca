@@ -84,12 +84,14 @@ def seek(stream: IO[bytes], selector: list[str | int]) -> Value:
         type = stream.read(1)[0]
         if type in (0x04, 0x05):
             stream.seek(8)
+
     if isinstance(selector[0], str):
         stream.read(1)
         if selector[0] == stream.read(3).decode("ascii").rstrip("\x00"):
             skip()
+
     else:
-        
+        raise NotImplementedError
 
 
 def serialize(value: object, buffer: bytearray):
