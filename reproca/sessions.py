@@ -46,9 +46,10 @@ class Sessions(Generic[T, U]):
             self.users.pop(session.userid)
 
     def get_by_userid(self, userid: T) -> U | None:
-        if sessionid := self.users.get(userid):
-            if session := self.sessions.get(sessionid):
-                return session.user
+        if (sessionid := self.users.get(userid)) and (
+            session := self.sessions.get(sessionid)
+        ):
+            return session.user
         return None
 
     def get_by_sessionid(self, sessionid: str) -> U | None:
