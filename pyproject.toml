@@ -10,7 +10,6 @@ python = "^3.11"
 starlette = "^0.34.0"
 msgspec = "^0.18.5"
 typing-extensions = "^4.9.0"
-typing = "^3.10.0.0"
 
 
 [build-system]

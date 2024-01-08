@@ -107,18 +107,28 @@ class Reproca(Generic[ID, USER]):
                     <link rel="stylesheet" href="/docs.css" />
                 </head>
                 <body>
-                    <div class="Methods">
+                    <div class="Methods col p-4 g-4">
                         {"".join(f'''
-                        <div class="Method">
-                            <span class="Method__name">{method.func.__name__}</span>
-                            <span class="Method__path">{method.path}</span>
+                        <div class="Method col p-2">
+                            <div class="row g-2">
+                                <span class="Method__path">{method.path}</span>
+                                <span class="Method__name">{method.func.__name__}()</span>
+                            </div>
                             {f'<span class="Method__doc">{method.func.__doc__}</span>'
                             if method.func.__doc__ else ''}
+                            <div class="Params col">
+                            <span class="Params__title">Parameters:</span>
+                            <div class="row g-1">
+                                {"".join(
+                                f'<span class="Params__param">{name}</span>'
+                                for name, _ in method.params)}
+                            </div>
+                            </div>
                         </div>
                         ''' for method in self.methods)}
                     </div>
                 </body>
-            </html>                 
+            </html>
             """
         )
 

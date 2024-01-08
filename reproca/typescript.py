@@ -3,7 +3,7 @@ import functools
 import sys
 import typing
 from datetime import datetime
-from types import UnionType
+from types import NoneType, UnionType
 from typing import (
     IO,
     TYPE_CHECKING,
@@ -106,6 +106,8 @@ class TypeScriptWriter(Writer):
         match obj:
             case msgspec.UnsetType():
                 self.write("undefined")
+            case type() if issubclass(obj, NoneType):
+                self.write("null")
             case None:
                 self.write("null")
             case type() if issubclass(obj, bool):

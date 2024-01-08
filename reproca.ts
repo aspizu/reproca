@@ -21,7 +21,7 @@ export class Reproca {
   async call_method(
     path: string,
     params: object,
-  ): Promise<ReprocaMethodResponse<unknown>> {
+  ): Promise<ReprocaMethodResponse<any>> {
     let response: Response;
     try {
       response = await fetch(this.host + path, {
