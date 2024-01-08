@@ -64,7 +64,7 @@ class TypeScriptWriter(Writer):
         self.resolved = set[object]()
 
     def resolve(self) -> None:
-        if len(self.unresolved) == 0:
+        if not self.unresolved:
             return
         self.resolved.update(self.unresolved)
         unresolved = self.unresolved
