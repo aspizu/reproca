@@ -39,15 +39,15 @@ class Method(msgspec.Struct):
     returns: object
 
 
-PAR = ParamSpec("PAR")
-RET = TypeVar("RET")
+Par = ParamSpec("Par")
+Ret = TypeVar("Ret")
 ID = TypeVar("ID")
-USER = TypeVar("USER")
+User = TypeVar("User")
 
 
-class Reproca(Generic[ID, USER]):
+class Reproca(Generic[ID, User]):
     def __init__(self) -> None:
-        self.sessions: Sessions[ID, USER] = Sessions()
+        self.sessions: Sessions[ID, User] = Sessions()
         self.methods: list[Method] = []
 
     def build(
@@ -143,8 +143,8 @@ class Reproca(Generic[ID, USER]):
         return response
 
     def method(
-        self, func: Callable[PAR, Awaitable[RET]]
-    ) -> Callable[PAR, Awaitable[RET]]:
+        self, func: Callable[Par, Awaitable[Ret]]
+    ) -> Callable[Par, Awaitable[Ret]]:
         ann = get_type_hints(func)
         if "return" not in ann:
             msg = f"Return type annotation missing for method {func.__name__}."
