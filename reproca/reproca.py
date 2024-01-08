@@ -165,8 +165,7 @@ class Reproca(Generic[ID, User]):
         pass_session_optional = False
         if obj := ann.get("session"):
             pass_session = True
-            if get_origin(obj) is Union:
-                pass_session_optional = True
+            pass_session_optional = get_origin(obj) is Union
         params = [
             (argname, argtype)
             for argname, argtype in ann.items()
