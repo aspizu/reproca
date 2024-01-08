@@ -1,6 +1,7 @@
 __pycache__
 *.egg-info
 build
+dist
 playground.py
 bindings.ts
 reproca_config.ts
