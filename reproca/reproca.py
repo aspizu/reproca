@@ -1,5 +1,5 @@
+"""Reproca class for creating application and registering RPC methods."""
 from __future__ import annotations
-from reproca.typescript import TypeScriptWriter
 
 __all__ = ["Reproca"]
 
@@ -25,6 +25,7 @@ from starlette.requests import Request
 from starlette.routing import BaseRoute, Route
 from reproca.response import Response
 from reproca.sessions import Sessions
+from reproca.typescript import TypeScriptWriter
 from . import resources
 
 if TYPE_CHECKING:
@@ -41,15 +42,26 @@ class Method(msgspec.Struct):
     returns: object
 
 
-PAR = ParamSpec("PAR")
-RET = TypeVar("RET")
-ID = TypeVar("ID")
-USER = TypeVar("USER")
+P = ParamSpec("P")
+R = TypeVar("R")
+I = TypeVar("I")
+U = TypeVar("U")
 
 
-class Reproca(Generic[ID, USER]):
+class Reproca(Generic[I, U]):
+    """Builds a `starlette.applications.Starlette` application.
+
+    Usage:
+    >>> from reproca import Reproca
+    >>> reproca = Reproca()
+    >>> ...
+    >>> app = reproca.build(debug=True)
+
+    Run using uvicorn `uvicorn module:app --reload`
+    """
+
     def __init__(self) -> None:
-        self.sessions: Sessions[ID, USER] = Sessions()
+        self.sessions: Sessions[I, U] = Sessions()
         self.methods: list[Method] = []
 
     def build(
@@ -63,6 +75,12 @@ class Reproca(Generic[ID, USER]):
         on_shutdown: Sequence[Callable[[], Any]] | None = None,
         lifespan: Lifespan[Starlette] | None = None,
     ) -> Starlette:
+        """Build a `starlette.applications.Starlette` application.
+
+        Arguments are passed to it's init.
+
+        If `debug` is True, The route /docs will be created with a documentation page.
+        """
         routes = list(routes or [])
         routes.append(Route("/logout", self._logout, methods=["POST"]))
         for method in self.methods:
@@ -112,7 +130,9 @@ class Reproca(Generic[ID, USER]):
                         <div class="Method col p-2">
                             <div class="row g-2">
                                 <span class="Method__path">{method.path}</span>
-                                <span class="Method__name">{method.func.__name__}()</span>
+                                <span class="Method__name">{
+                                    method.func.__name__
+                                }()</span>
                             </div>
                             {f'<span class="Method__doc">{method.func.__doc__}</span>'
                             if method.func.__doc__ else ''}
@@ -144,9 +164,25 @@ class Reproca(Generic[ID, USER]):
         )
         return response
 
-    def method(
-        self, func: Callable[PAR, Awaitable[RET]]
-    ) -> Callable[PAR, Awaitable[RET]]:
+    def method(self, func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
+        """Register a RPC method.
+
+        Parameter types and return type must be something msgspec can serialize.
+
+        If request argument is present, the request object will be passed.
+        If response argument is present, a object will be passed which allows to
+        set cookies or set the session id for the response or set the response headers.
+        If session argument is present, this method can only be called if the user
+        is logged-in, failing the method will not be called.
+        If the type of session argument is `T|None` then None will be passed if
+        the user is not logged-in.
+        request, response and session cannot be used as method parameter names.
+
+        Usage:
+        >>> @reproca.method
+        >>> async def my_method(my_parameter: str) -> int:
+        >>>     return int(my_parameter)
+        """
         ann = get_type_hints(func)
         if "return" not in ann:
             msg = f"Return type annotation missing for method {func.__name__}."
@@ -209,6 +245,12 @@ class Reproca(Generic[ID, USER]):
         return func
 
     def typescript(self, file: IO[str]) -> None:
+        """Write typescript definitions to file.
+
+        This file should be placed in the same directory as `reproca.ts`.
+
+        `reproca_config.ts` should default export a `Reproca` client object.
+        """
         writer = TypeScriptWriter(file)
         writer.write(
             'import {ReprocaMethodResponse} from "./reproca.ts";'

@@ -1,4 +1,8 @@
+"""Transpiles Python types to TypeScript types."""
 from __future__ import annotations
+
+__all__ = []
+
 import functools
 import sys
 import typing
@@ -41,19 +45,17 @@ class Writer:
         self.file = file
 
     def write(self, *strings: str) -> None:
-        for string in strings:
-            self.file.write(string)
+        self.file.writelines(strings)
 
     def intersperse(
-        self, separator: Callable[[], None], callbacks: Iterable[Callable[[], None]]
+        self, separator: Callable[[], None], funcs: Iterable[Callable[[], None]]
     ) -> None:
-        sentinel = object()
-        it = iter(callbacks)
-        nxt = next(it, sentinel)
-        while nxt is not sentinel:
-            nxt()  # type: ignore
-            nxt = next(it, sentinel)
-            if nxt is not sentinel:
+        it = iter(funcs)
+        func = next(it, None)
+        while func is not None:
+            func()
+            func = next(it, None)
+            if func is not None:
                 separator()
 
 
@@ -61,7 +63,7 @@ class TypeScriptWriter(Writer):
     def __init__(self, file: IO[str]) -> None:
         super().__init__(file)
         self.unresolved: set[type[msgspec.Struct] | TypeAliasType] = set()
-        self.resolved = set[object]()
+        self.resolved: set[object] = set()
 
     def resolve(self) -> None:
         if len(self.unresolved) == 0:
@@ -155,7 +157,7 @@ class TypeScriptWriter(Writer):
                         self.write(">")
                     case type() if issubclass(orig, tuple):
                         args = get_args(obj)
-                        if len(args) == 2 and args[1] is ...:
+                        if args[1:] == (...,):
                             self.type(list[args[0]])  # type: ignore
                             return
                         self.write("[")
@@ -166,21 +168,18 @@ class TypeScriptWriter(Writer):
                         self.write("]")
                     case type() if issubclass(
                         orig,
-                        (
-                            list,
-                            set,
-                            frozenset,
-                            Collection,
-                            Sequence,
-                            MutableSequence,
-                            MutableSet,
-                        ),
+                        list
+                        | set
+                        | frozenset
+                        | Collection
+                        | Sequence
+                        | MutableSequence
+                        | MutableSet,
                     ):
-                        args = get_args(obj)
                         self.write("(")
-                        self.type(args[0])
+                        self.type(get_args(obj)[0])
                         self.write(")[]")
-                    case type() if issubclass(orig, (dict, Mapping, MutableMapping)):
+                    case type() if issubclass(orig, dict | Mapping | MutableMapping):
                         args = get_args(obj)
                         self.write("{[index:")
                         self.type(args[0])
@@ -188,10 +187,12 @@ class TypeScriptWriter(Writer):
                         self.type(args[1])
                         self.write("}")
                     case type() if orig is Literal:
-                        args = get_args(obj)
                         self.intersperse(
                             lambda: self.write("|"),
-                            (functools.partial(self.literal, arg) for arg in args),
+                            (
+                                functools.partial(self.literal, arg)
+                                for arg in get_args(obj)
+                            ),
                         )
                     case type() if orig is UnionType:
 
@@ -210,18 +211,16 @@ class TypeScriptWriter(Writer):
                         msg = f"Unsupported type: {obj!r} type={type(obj)!r}"
                         raise TypeError(msg)
 
-    def struct(self, obj: type[msgspec.Struct]) -> None:
-        ann = get_type_hints(obj)
-        params = next(
+    def struct(self, struct: type[msgspec.Struct]) -> None:
+        self.write("export interface ", struct.__name__)
+        if params := next(
             (
                 get_args(base)
-                for base in get_original_bases(obj)
+                for base in get_original_bases(struct)
                 if get_origin(base) is Generic
             ),
             None,
-        )
-        self.write("export interface ", obj.__name__)
-        if params:
+        ):
             self.write("<")
             self.intersperse(
                 lambda: self.write(","),
@@ -229,22 +228,21 @@ class TypeScriptWriter(Writer):
             )
             self.write(">")
         self.write("{")
-        for name, obj2 in ann.items():
+        for fieldname, fieldtype in get_type_hints(struct).items():
             optional = False
             if (
-                get_origin(obj2) is UnionType
-                and (msgspec.UnsetType in (args := get_args(obj2)))
+                get_origin(fieldtype) is UnionType
+                and msgspec.UnsetType in (args := get_args(fieldtype))
                 and any(
-                    True
-                    for field in msgspec.structs.fields(obj)
-                    if field.default is msgspec.UNSET
+                    field.default is msgspec.UNSET
+                    for field in msgspec.structs.fields(struct)
                 )
             ):
                 args = (arg for arg in args if arg is not msgspec.UnsetType)
-                obj2 = Union[*args]  # type: ignore
+                fieldtype = Union[*args]  # type: ignore
                 optional = True
-            self.write(name, "?:" if optional else ":")
-            self.type(obj2)
+            self.write(fieldname, "?:" if optional else ":")
+            self.type(fieldtype)
             self.write(";")
         self.write("}")
 
@@ -262,9 +260,8 @@ class TypeScriptWriter(Writer):
         self.write("):Promise<ReprocaMethodResponse<")
         self.type(method.returns)
         self.write(">>{return await reproca.call_method(", repr(method.path), ",{")
-
-        for i, (name, _) in enumerate(method.params):
-            self.write(name)
-            if i < len(method.params) - 1:
-                self.write(",")
+        self.intersperse(
+            lambda: self.write(","),
+            (functools.partial(self.write, name) for name, _ in method.params),
+        )
         self.write("})}")
