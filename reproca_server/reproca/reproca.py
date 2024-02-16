@@ -1,5 +1,6 @@
 """Reproca class for creating application and registering RPC methods."""
 from __future__ import annotations
+from types import UnionType
 
 __all__ = ["Reproca"]
 
@@ -14,18 +15,17 @@ from typing import (
     ParamSpec,
     Sequence,
     TypeVar,
-    Union,
     get_origin,
     get_type_hints,
 )
 import msgspec
 import starlette.responses
-from starlette.applications import Starlette
-from starlette.requests import Request
-from starlette.routing import BaseRoute, Route
 from reproca.response import Response
 from reproca.sessions import Sessions
 from reproca.typescript import TypeScriptWriter
+from starlette.applications import Starlette
+from starlette.requests import Request
+from starlette.routing import BaseRoute, Route
 from . import resources
 
 if TYPE_CHECKING:
@@ -203,7 +203,7 @@ class Reproca(Generic[I, U]):
         pass_session_optional = False
         if obj := ann.get("session"):
             pass_session = True
-            if get_origin(obj) is Union:
+            if get_origin(obj) is UnionType:
                 pass_session_optional = True
         params = [
             (argname, argtype)
@@ -253,7 +253,7 @@ class Reproca(Generic[I, U]):
         """
         writer = TypeScriptWriter(file)
         writer.write(
-            'import {ReprocaMethodResponse} from "./reproca.ts";'
+            'import type {ReprocaMethodResponse} from "reproca";'
             'import reproca from "./reproca_config.ts";'
         )
         for method in self.methods:

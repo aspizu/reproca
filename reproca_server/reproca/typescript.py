@@ -1,5 +1,6 @@
 """Transpiles Python types to TypeScript types."""
 from __future__ import annotations
+import hashlib
 
 __all__ = []
 
@@ -7,6 +8,7 @@ import functools
 import sys
 import typing
 from datetime import datetime
+from hashlib import sha512
 from types import NoneType, UnionType
 from typing import (
     IO,
@@ -34,6 +36,23 @@ if TYPE_CHECKING:
     from .reproca import Method
 
 
+class HashFile:
+    def __init__(
+        self, file: IO[str], hasher: Callable[[], hashlib._Hash] = sha512
+    ) -> None:
+        self.file = file
+        self.hash = hasher()
+
+    def write(self, s: str) -> int:
+        value = self.file.write(s)
+        self.hash.update(s.encode())
+        return value
+
+    def writelines(self, strings: Iterable[str]) -> None:
+        for string in strings:
+            self.write(string)
+
+
 def get_type_alias_value(obj: TypeAliasType) -> object:
     globalns = getattr(sys.modules.get(obj.__module__, None), "__dict__", {})  # type: ignore
     localns = dict(vars(obj))
@@ -42,7 +61,7 @@ def get_type_alias_value(obj: TypeAliasType) -> object:
 
 class Writer:
     def __init__(self, file: IO[str]) -> None:
-        self.file = file
+        self.file = HashFile(file)
 
     def write(self, *strings: str) -> None:
         self.file.writelines(strings)
@@ -212,7 +231,7 @@ class TypeScriptWriter(Writer):
                         raise TypeError(msg)
 
     def struct(self, struct: type[msgspec.Struct]) -> None:
-        self.write("export interface ", struct.__name__)
+        self.write(f"\n/** {struct.__doc__} */\nexport interface ", struct.__name__)
         if params := next(
             (
                 get_args(base)
@@ -247,7 +266,11 @@ class TypeScriptWriter(Writer):
         self.write("}")
 
     def reproca_method(self, method: Method) -> None:
-        self.write("export async function ", method.func.__name__, "(")
+        self.write(
+            f"\n/** {method.func.__doc__} */\nexport async function ",
+            method.func.__name__,
+            "(",
+        )
 
         def do(name: str, obj: object) -> None:
             self.write(name, ":")
@@ -259,7 +282,7 @@ class TypeScriptWriter(Writer):
         )
         self.write("):Promise<ReprocaMethodResponse<")
         self.type(method.returns)
-        self.write(">>{return await reproca.call_method(", repr(method.path), ",{")
+        self.write(">>{return await reproca.callMethod(", repr(method.path), ",{")
         self.intersperse(
             lambda: self.write(","),
             (functools.partial(self.write, name) for name, _ in method.params),

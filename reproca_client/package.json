@@ -1,0 +1,19 @@
+{
+    "name": "reproca",
+    "version": "0.1.0",
+    "main": "./src/index.ts",
+    "type": "module",
+    "dependencies": {
+        "@preact/signals": "^1.2.2",
+        "preact": "^10.19.3",
+        "react": "^18.2.0"
+    },
+    "devDependencies": {
+        "@types/react": "^18.2.48"
+    },
+    "exports": {
+        ".": "./src/index.ts",
+        "./forReact/*": "./src/forReact/*.ts",
+        "./forPreact/*": "./src/forPreact/*.ts"
+    }
+}

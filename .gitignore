@@ -5,3 +5,5 @@ dist
 playground.py
 bindings.ts
 reproca_config.ts
+.ruff_cache
+node_modules
