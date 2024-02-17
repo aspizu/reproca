@@ -24,6 +24,7 @@ class Response:
             ]
         ] = []
         self.headers: dict[str, str] = {}
+        self.should_logout = False
 
     def set_cookie(
         self,
@@ -69,3 +70,11 @@ class Response:
             httponly=True,
             samesite="strict",
         )
+
+    def logout(self) -> None:
+        """Unset session and remove user's session.
+
+        Equivalent to the user calling the special logout method.
+        """
+        self.unset_session()
+        self.should_logout = True

@@ -20,12 +20,12 @@ from typing import (
 )
 import msgspec
 import starlette.responses
-from reproca.response import Response
-from reproca.sessions import Sessions
-from reproca.typescript import TypeScriptWriter
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.routing import BaseRoute, Route
+from reproca.response import Response
+from reproca.sessions import Sessions
+from reproca.typescript import TypeScriptWriter
 from . import resources
 
 if TYPE_CHECKING:
@@ -237,6 +237,9 @@ class Reproca(Generic[I, U]):
             )
             for cookie in response_params.cookies:
                 response.set_cookie(*cookie)
+            if response_params.should_logout:
+                if session_id := request.cookies.get("reproca_session_id"):
+                    self.sessions.remove_by_sessionid(session_id)
             return response
 
         self.methods.append(
@@ -253,7 +256,7 @@ class Reproca(Generic[I, U]):
         """
         writer = TypeScriptWriter(file)
         writer.write(
-            'import type {ReprocaMethodResponse} from "reproca";'
+            'import type {ReprocaMethodResponse} from "./reproca";'
             'import reproca from "./reproca_config.ts";'
         )
         for method in self.methods:
