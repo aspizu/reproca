@@ -81,7 +81,8 @@ class Reproca(Generic[I, U]):
 
         If `debug` is True, The route /docs will be created with a documentation page.
         """
-        routes = list(routes or [])
+        other_routes = routes
+        routes = []
         routes.append(Route("/logout", self._logout, methods=["POST"]))
         for method in self.methods:
             routes.append(Route(method.path, method.handler, methods=["POST"]))
@@ -94,6 +95,8 @@ class Reproca(Generic[I, U]):
                     methods=["GET"],
                 )
             )
+        if other_routes:
+            routes.extend(other_routes)
         return Starlette(
             debug=debug,
             middleware=middleware,
