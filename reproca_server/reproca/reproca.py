@@ -1,6 +1,7 @@
 """Reproca class for creating application and registering RPC methods."""
 from __future__ import annotations
 from types import UnionType
+from rich import print
 
 __all__ = ["Reproca"]
 
@@ -60,14 +61,14 @@ class Reproca(Generic[I, U]):
     Run using uvicorn `uvicorn module:app --reload`
     """
 
-    def __init__(self) -> None:
+    def __init__(self, *, debug: bool = False) -> None:
         self.sessions: Sessions[I, U] = Sessions()
         self.methods: list[Method] = []
+        self.debug = debug
 
     def build(
         self,
         *,
-        debug: bool = False,
         routes: Sequence[BaseRoute] | None = None,
         middleware: Sequence[Middleware] | None = None,
         exception_handlers: Mapping[Any, ExceptionHandler] | None = None,
@@ -86,7 +87,7 @@ class Reproca(Generic[I, U]):
         routes.append(Route("/logout", self._logout, methods=["POST"]))
         for method in self.methods:
             routes.append(Route(method.path, method.handler, methods=["POST"]))
-        if debug:
+        if self.debug:
             routes.append(Route("/docs", self._docs, methods=["GET"]))
             routes.append(
                 Route(
@@ -98,7 +99,7 @@ class Reproca(Generic[I, U]):
         if other_routes:
             routes.extend(other_routes)
         return Starlette(
-            debug=debug,
+            debug=self.debug,
             middleware=middleware,
             exception_handlers=exception_handlers,
             on_startup=on_startup,
@@ -243,6 +244,8 @@ class Reproca(Generic[I, U]):
             if response_params.should_logout:
                 if session_id := request.cookies.get("reproca_session_id"):
                     self.sessions.remove_by_sessionid(session_id)
+            if self.debug:
+                print(response.__dict__)
             return response
 
         self.methods.append(

@@ -1,5 +1,6 @@
 """Transpiles Python types to TypeScript types."""
 from __future__ import annotations
+
 import hashlib
 
 __all__ = []
@@ -29,6 +30,7 @@ from typing import (
     get_origin,
     get_type_hints,
 )
+
 import msgspec
 from typing_extensions import TypeAliasType, get_original_bases
 
