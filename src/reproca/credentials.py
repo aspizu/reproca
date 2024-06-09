@@ -54,7 +54,7 @@ class Credentials:
             value or "",
             secure=True,
             httponly=True,
-            samesite="strict",
+            samesite="none",
         )
 
     def set_cookie(

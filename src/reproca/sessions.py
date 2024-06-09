@@ -37,7 +37,7 @@ class Sessions[T, U]:
         """Create a session for user by user id.
 
         Usage:
-        >>> response.set_session(reproca.sessions.create(...))
+        >>> credentials.set_session(reproca.sessions.create(...))
         """
         self.remove_by_userid(userid)
         sessionid = secrets.token_urlsafe()
