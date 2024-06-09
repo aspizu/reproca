@@ -55,7 +55,7 @@ class Credentials:
             secure=True,
             httponly=True,
             samesite="none",
-            partitioned=True,
+            partitioned=False,  # Change to True when http.cookies supports it
         )
 
     def set_cookie(
