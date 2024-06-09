@@ -55,6 +55,7 @@ class Credentials:
             secure=True,
             httponly=True,
             samesite="none",
+            partitioned=True,
         )
 
     def set_cookie(
@@ -68,6 +69,7 @@ class Credentials:
         secure: bool = False,
         httponly: bool = False,
         samesite: Literal["lax", "strict", "none"] | None = "lax",
+        partitioned: bool = False,
     ) -> None:
         cookie = http_cookies.SimpleCookie()
         cookie[key] = value
@@ -87,5 +89,7 @@ class Credentials:
             cookie[key]["httponly"] = True
         if samesite is not None:
             cookie[key]["samesite"] = samesite
+        if partitioned:
+            cookie[key]["partitioned"] = True
         cookie_val = cookie.output(header="").strip()
         self._headers.append((b"set-cookie", cookie_val.encode("latin-1")))
