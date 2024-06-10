@@ -1,11 +1,7 @@
-from pymemcache import serde
-from pymemcache.client.base import Client
+from bmemcached import Client
 
 
 class Memcache(Client):
-    def __init__(self, address: tuple[str, int] | str) -> None:
-        super().__init__(address, serde=serde.pickle_serde)
-
     def rate_limit(self, accessor: str, resource: str, rate: int) -> bool:
         """Rate limit an accessor for a resource.
 
@@ -21,5 +17,5 @@ class Memcache(Client):
         lock = self.get(f"accessor={accessor};resource={resource}")
         if lock:
             return True
-        self.set(f"accessor={accessor};resource={resource}", True, expire=rate)
+        self.set(f"accessor={accessor};resource={resource}", True, time=rate)
         return False

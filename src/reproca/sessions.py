@@ -44,7 +44,7 @@ class Sessions[T, U]:
         self.memcache.set(
             f"sessionid={sessionid}",
             Session(userid, user, datetime.now(tz=UTC)),
-            expire=self.expire,
+            time=self.expire,
         )
         self.memcache.set(f"userid={userid}", sessionid)
         return sessionid
@@ -57,7 +57,7 @@ class Sessions[T, U]:
         self.memcache.replace(
             f"sessionid={sessionid}",
             Session(session.userid, user, session.created),
-            expire=int(
+            time=int(
                 self.expire - (datetime.now(tz=UTC) - session.created).total_seconds()
             ),
         )
@@ -67,14 +67,14 @@ class Sessions[T, U]:
         sessionid: str | None = self.memcache.get(f"userid={userid}")
         if sessionid is None:
             return
-        self.memcache.delete_many((f"sessionid={sessionid}", f"userid={userid}"))
+        self.memcache.delete_multi((f"sessionid={sessionid}", f"userid={userid}"))
 
     def remove_by_sessionid(self, sessionid: str) -> None:
         """Remove a session by session id."""
         session: Session[T, U] | None = self.memcache.get(f"sessionid={sessionid}")
         if session is None:
             return
-        self.memcache.delete_many(
+        self.memcache.delete_multi(
             (f"sessionid={sessionid}", f"userid={session.userid}")
         )
 
