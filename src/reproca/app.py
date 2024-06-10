@@ -86,12 +86,15 @@ class App[T, U]:
         send: ASGISendCallable,
     ) -> None:
         headers = get_headers(scope)
-        response_headers = [
+        response_headers: list[tuple[bytes, bytes]] = [
             # Bypass CORS, could be dangerous?
-            (b"Access-Control-Allow-Origin", headers[b"origin"]),
             (b"Access-Control-Allow-Credentials", b"true"),
             (b"Content-Type", b"application/json"),
         ]
+        if b"origin" in headers:
+            response_headers.append(
+                (b"Access-Control-Allow-Origin", headers[b"origin"])
+            )
         assert scope["client"] is not None
         address = scope["client"][0]
         try:
