@@ -23,13 +23,13 @@ if TYPE_CHECKING:
 
 
 _routes = []
-_sessions: Sessions[object]
+_sessions: Sessions[Any]
 
 type Method = Callable[..., Awaitable[object]]
 
 
 def create_starlette_application(
-    sessions: type[Sessions[object]],
+    sessions: type[Sessions[Any]],
     debug: bool = False,
     routes: list[BaseRoute] | None = None,
     middleware: Sequence[Middleware] | None = None,
