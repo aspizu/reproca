@@ -50,3 +50,9 @@ class Sessions[T]:
             max_age=int(self.expiry),
         )
         return response
+
+    def remove(self, user: str) -> None:
+        if session_id := self._users.get(user):
+            del self._sessions[session_id]
+            del self._expiry[session_id]
+            del self._users[user]

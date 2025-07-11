@@ -29,7 +29,7 @@ type Method = Callable[..., Awaitable[object]]
 
 
 def create_starlette_application(
-    sessions: type[Sessions[Any]],
+    sessions: Sessions[Any],
     debug: bool = False,
     routes: list[BaseRoute] | None = None,
     middleware: Sequence[Middleware] | None = None,
@@ -39,7 +39,7 @@ def create_starlette_application(
     lifespan: Lifespan[Starlette] | None = None,
 ) -> Starlette:
     global _sessions  # noqa: PLW0603
-    _sessions = sessions()
+    _sessions = sessions
     routes = [*routes, *_routes] if routes else _routes
     return Starlette(
         routes=routes,
