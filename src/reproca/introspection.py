@@ -47,7 +47,7 @@ def get_parameters(func: Callable[..., object]) -> Parameters:
 
     session_mandatory = False
     if annotation := type_hints.get("session"):
-        session_mandatory = get_origin(annotation) is UnionType
+        session_mandatory = get_origin(annotation) is not UnionType
 
     return Parameters(
         entries,
