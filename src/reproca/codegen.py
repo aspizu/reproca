@@ -77,14 +77,12 @@ def generate_typescript_bindings(
 ) -> None:
     if isinstance(output_path, str):
         output_path = Path(output_path)
-    from src.reproca.codegen import CodegenState, WriterState, resolve
-    from src.reproca.codegen import method as codegen_method
 
     with output_path.open("w", encoding="utf-8") as f:
         writer = WriterState(f)
         state = CodegenState(writer)
         for m in _methods:
-            codegen_method(state, m)
+            method(state, m)
         resolve(state)
     try:
         subprocess.run(  # noqa: S603
