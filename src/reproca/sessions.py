@@ -42,7 +42,7 @@ class Sessions[T]:
     def create_session_cookie(self, user: str, obj: T, response: Response) -> Response:
         session_id = self.create(user, obj)
         response.set_cookie(
-            "cookie-id",
+            "session-id",
             value=session_id,
             httponly=True,
             samesite="lax",
