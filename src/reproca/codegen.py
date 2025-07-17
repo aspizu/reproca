@@ -33,6 +33,7 @@ from typing import (
 )
 
 import msgspec
+from starlette.responses import Response as StarletteResponse
 
 from .introspection import SPECIAL_PARAMETERS
 from .state import _methods
@@ -215,6 +216,8 @@ def type_object(state: CodegenState, type_obj: object) -> None:  # noqa: C901, P
                 state.unresolved.add(type_obj)
             write(state.writer, type_obj.__name__)
         case type() if type_obj is Any:
+            write(state.writer, "any")
+        case type() if issubclass(type_obj, StarletteResponse):
             write(state.writer, "any")
         case _:
             generic_type(state, type_obj)
