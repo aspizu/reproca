@@ -115,9 +115,9 @@ def emit_call_api(state: CodegenState) -> None:
         return
     write(
         state.writer,
-        'export let apiPrefix = "/";\n',
+        'export const config = { apiPrefix: "/" };\n',
         "async function callApi<T>(name: string, parameters: any): Promise<T> {\n",
-        "  const response = await fetch(`${apiPrefix}${name}`, {\n",
+        "  const response = await fetch(`${config.apiPrefix}${name}`, {\n",
         "    method: 'POST',\n",
         "    headers: { 'Content-Type': 'application/json' },\n",
         "    body: JSON.stringify(parameters),\n",
