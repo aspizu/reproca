@@ -87,7 +87,7 @@ def generate_typescript_bindings(
         resolve(state)
     try:
         subprocess.run(  # noqa: S603
-            ["prettier", "-uwu", str(output_path)],  # noqa: S607
+            ["prettier", "--no-config", "-uwu", str(output_path)],  # noqa: S607
             check=True,
         )
     except FileNotFoundError:
