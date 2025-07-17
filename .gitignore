@@ -9,3 +9,4 @@ wheels/
 # Virtual environments
 .venv
 playground.py
+*.gen.ts
