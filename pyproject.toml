@@ -37,6 +37,7 @@ reportExplicitAny = false
 reportUnusedCallResult = false
 reportImportCycles = false
 reportImplicitStringConcatenation = false
+reportDeprecated = false
 
 [tool.ruff.lint]
 select = ["ALL"]

@@ -30,29 +30,22 @@ class Parameters(msgspec.Struct):
 
 def get_parameters(func: Callable[..., object]) -> Parameters:
     entries = {}
-    type_hints = get_type_hints(func)
+    hints = get_type_hints(func)
     for key, value in signature(func).parameters.items():
         if key in SPECIAL_PARAMETERS:
             continue
         default = NODEFAULT if value.default is value.empty else value.default
-        entries[key.lower()] = Parameter(key, type_hints[key], default)
-
+        entries[key.lower()] = Parameter(key, hints[key], default)
     fields = []
-    for parameter in entries.values():
-        if parameter.default is NODEFAULT:
-            fields.append((parameter.name, parameter.type))
+    for p in entries.values():
+        if p.default is NODEFAULT:
+            fields.append((p.name, p.type))
         else:
-            fields.append((parameter.name, parameter.type, parameter.default))
-    decoder = msgspec.json.Decoder(msgspec.defstruct("X", fields))
-
-    session_mandatory = False
-    if annotation := type_hints.get("session"):
-        session_mandatory = get_origin(annotation) is not UnionType
-
+            fields.append((p.name, p.type, p.default))
+    name = "".join(part.capitalize() for part in func.__name__.split("_"))
+    decoder = msgspec.json.Decoder(msgspec.defstruct(f"{name}Parameters", fields))
+    ann = hints.get("session")
+    mandatory = get_origin(ann) is not UnionType if ann else False
     return Parameters(
-        entries,
-        decoder,
-        "request" in type_hints,
-        "session" in type_hints,
-        session_mandatory,
+        entries, decoder, "request" in hints, "session" in hints, mandatory
     )

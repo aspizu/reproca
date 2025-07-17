@@ -28,25 +28,19 @@ def parse_parameter(text: str, type_: object) -> object:
 
 async def parse_parameters(request: Request, parameters: Parameters) -> msgspec.Struct:
     effective = {}
-
     for key, value in request.query_params.items():
-        parameter = parameters.entries.get(convert_case(key))
-        if parameter is None:
-            continue
-        effective[parameter.name] = parse_parameter(value, parameter.type)
-
+        converted_key = convert_case(key)
+        if param := parameters.entries.get(converted_key):
+            effective[param.name] = parse_parameter(value, param.type)
     for key, value in request.headers.items():
         key = key.lower()  # noqa: PLW2901
         if not key.startswith("x-"):
             continue
-        parameter = parameters.entries.get(convert_case(key.removeprefix("x-")))
-        if parameter is None:
-            continue
-        effective[parameter.name] = parse_parameter(value, parameter.type)
-
+        converted_key = convert_case(key.removeprefix("x-"))
+        if param := parameters.entries.get(converted_key):
+            effective[param.name] = parse_parameter(value, param.type)
     body = msgspec.json.decode(
         await request.body() or b"{}", type=dict[str, Any], dec_hook=collapse_case
     )
-
     round_trip = msgspec.json.encode({**effective, **body})
     return parameters.decoder.decode(round_trip)

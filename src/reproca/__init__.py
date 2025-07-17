@@ -9,8 +9,11 @@ from starlette.endpoints import HTTPEndpoint
 from starlette.responses import PlainTextResponse, Response
 from starlette.routing import BaseRoute, Route
 
+from .codegen import generate_typescript_bindings
 from .introspection import Parameters, get_parameters
 from .protocol import parse_parameters
+from .sessions import Sessions
+from .state import _methods, _routes, _sessions
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Mapping, Sequence
@@ -19,11 +22,13 @@ if TYPE_CHECKING:
     from starlette.requests import Request
     from starlette.types import ExceptionHandler, Lifespan
 
-    from .sessions import Sessions
+__all__ = [
+    "Sessions",
+    "create_starlette_application",
+    "generate_typescript_bindings",
+    "method",
+]
 
-
-_routes = []
-_sessions: Sessions[Any]
 
 type Method = Callable[..., Awaitable[object]]
 
@@ -55,6 +60,9 @@ def create_starlette_application(
 def method(method: Method) -> Method:
     parameters = get_parameters(method)
 
+    method.__parameters_type__ = parameters.decoder.type  # pyright: ignore[reportFunctionMemberAccess]
+    _methods.append(method)
+
     class Endpoint(HTTPEndpoint):
         async def post(self, request: Request) -> Response:
             return await invoke_method(method, request, parameters)
@@ -80,6 +88,7 @@ async def invoke_method(
         kwargs["request"] = request
     if parameters.needs_session:
         kwargs["session"] = None
+    assert _sessions is not None
     if session := _sessions.get(request.cookies.get("session-id")):
         if parameters.needs_session:
             kwargs["session"] = session
