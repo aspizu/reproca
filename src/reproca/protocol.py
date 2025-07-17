@@ -7,7 +7,7 @@ import msgspec
 if TYPE_CHECKING:
     from starlette.requests import Request
 
-    from reproca.introspection import Parameters
+    from .introspection import Parameters
 
 
 def convert_case(text: str) -> str:
