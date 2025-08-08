@@ -12,7 +12,6 @@ from starlette.routing import BaseRoute, Route
 from .codegen import generate_typescript_bindings
 from .introspection import Parameters, get_parameters
 from .protocol import parse_parameters
-from .sessions import Sessions
 from .state import _methods, _routes, _sessions
 
 if TYPE_CHECKING:
@@ -22,8 +21,9 @@ if TYPE_CHECKING:
     from starlette.requests import Request
     from starlette.types import ExceptionHandler, Lifespan
 
+    from .sessions import Sessions
+
 __all__ = [
-    "Sessions",
     "create_starlette_application",
     "generate_typescript_bindings",
     "method",

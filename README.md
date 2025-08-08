@@ -87,3 +87,13 @@ async def logout(session: tuple[str, object] | None) -> None:
     if session is not None:
         sessions.remove(session[0])
 ```
+
+## Redis Sessions
+
+```py
+from reproca.sessions.redis_sessions import RedisSessions
+from redis import Redis
+
+redis = Redis(host='localhost', port=6379, db=0)
+sessions = RedisSessions[User](redis)
+```
