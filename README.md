@@ -68,6 +68,12 @@ The type annotation of the `session` parameter must be `tuple[str, User]` or
 as the permissions of the user. This is stored on the backend, not transferred to the 
 frontend.
 
+#### Update user object in sessions
+
+```py
+sessions.update(user_id, User(additional_data="new_data"))
+```
+
 ### Authentication
 
 It's your responsibility to implement login and logout methods.

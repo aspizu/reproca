@@ -67,3 +67,9 @@ class Sessions[T]:
             del self.sessions[session_id]
             del self.expiry[session_id]
             del self.users[user]
+
+    def update(self, user: str, obj: T) -> None:
+        session_id = self.users.get(user)
+        if session_id is None:
+            return
+        self.sessions[session_id] = msgspec.json.encode(obj).decode()
