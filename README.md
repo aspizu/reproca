@@ -4,7 +4,7 @@ from __future__ import annotations
 import msgspec
 
 import reproca.sessions
-from reproca import create_starlette_application, method
+from reproca import create_starlette_application, method, generate_typescript_bindings
 
 
 class User(msgspec.Struct):
@@ -21,6 +21,9 @@ async def function_name(param_name: int) -> int:
     return param_name * 1000
 
 app = create_starlette_application(sessions)
+
+# --- TypeScript code generation on first server start ---
+generate_typescript_bindings("api.gen.ts")
 ```
 
 use `base="/api/"` to set the base path for all methods (only applies to methods).
