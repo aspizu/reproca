@@ -13,11 +13,7 @@ from ._state import _methods, _routes, _sessions
 from .codegen import generate_typescript_bindings
 from .introspection import Parameters, get_parameters
 from .protocol import parse_parameters
-<<<<<<< HEAD
 from .sessions import Sessions
-=======
-from .state import _methods, _routes, _sessions
->>>>>>> 6056593f1e70e121a0d59bd77f1e62c0a9c81f4f
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Mapping, Sequence
