@@ -49,8 +49,8 @@ def create_starlette_application(
     if base:
         if base[0] != "/":
             base = "/" + base
-        if base[-1] != "/":
-            base += "/"
+        if base[-1] == "/":
+            base = base[:-1]
         for route in _routes:
             route.path = base + route.path
     _sessions = sessions
