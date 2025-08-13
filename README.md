@@ -23,6 +23,8 @@ async def function_name(param_name: int) -> int:
 app = create_starlette_application(sessions)
 ```
 
+use `base="/api/"` to set the base path for all methods (only applies to methods).
+
 ### Methods
 
 The function name is the endpoint `function_name` -> `curl -X POST https://example.com/function-name/`

@@ -9,11 +9,11 @@ from starlette.endpoints import HTTPEndpoint
 from starlette.responses import PlainTextResponse, Response
 from starlette.routing import BaseRoute, Route
 
+from ._state import _methods, _routes, _sessions
 from .codegen import generate_typescript_bindings
 from .introspection import Parameters, get_parameters
 from .protocol import parse_parameters
 from .sessions import Sessions
-from .state import _methods, _routes, _sessions
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Mapping, Sequence
@@ -42,12 +42,20 @@ def create_starlette_application(
     on_startup: Sequence[Callable[[], Any]] | None = None,
     on_shutdown: Sequence[Callable[[], Any]] | None = None,
     lifespan: Lifespan[Starlette] | None = None,
+    base: str | None = None,
 ) -> Starlette:
     global _sessions  # noqa: PLW0603
+    if base:
+        if base[0] != "/":
+            base = "/" + base
+        if base[-1] != "/":
+            base += "/"
+        for route in _routes:
+            route.path = base + route.path
     _sessions = sessions
-    routes = [*routes, *_routes] if routes else _routes
+    allroutes: Sequence[BaseRoute] = [*routes, *_routes] if routes else _routes
     return Starlette(
-        routes=routes,
+        routes=allroutes,
         debug=debug,
         middleware=middleware,
         exception_handlers=exception_handlers,

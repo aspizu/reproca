@@ -35,8 +35,8 @@ from typing import (
 import msgspec
 from starlette.responses import Response as StarletteResponse
 
+from ._state import _methods
 from .introspection import SPECIAL_PARAMETERS
-from .state import _methods
 
 
 def get_type_alias_value(obj: TypeAliasType) -> object:
