@@ -70,6 +70,12 @@ The type annotation of the `session` parameter must be `tuple[str, User]` or
 as the permissions of the user. This is stored on the backend, not transferred to the 
 frontend.
 
+#### Update user object in sessions
+
+```py
+sessions.update(user_id, User(additional_data="new_data"))
+```
+
 ### Authentication
 
 It's your responsibility to implement login and logout methods.
@@ -88,4 +94,14 @@ logout can be implemented like this:
 async def logout(session: tuple[str, object] | None) -> None:
     if session is not None:
         sessions.remove(session[0])
+```
+
+## Redis Sessions
+
+```py
+from reproca.sessions.redis_sessions import RedisSessions
+from redis import Redis
+
+redis = Redis(host='localhost', port=6379, db=0)
+sessions = RedisSessions[User](redis)
 ```
