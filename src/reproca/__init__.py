@@ -7,7 +7,7 @@ import msgspec
 from starlette.applications import Starlette
 from starlette.endpoints import HTTPEndpoint
 from starlette.responses import PlainTextResponse, Response
-from starlette.routing import BaseRoute, Route
+from starlette.routing import BaseRoute, Mount, Route
 
 from ._state import _methods, _routes, _sessions
 from .codegen import generate_typescript_bindings
@@ -46,15 +46,16 @@ def create_starlette_application(
     base: str | None = None,
 ) -> Starlette:
     global _sessions  # noqa: PLW0603
+    _sessions = sessions
     if base:
         if base[0] != "/":
             base = "/" + base
         if base[-1] == "/":
             base = base[:-1]
-        for route in _routes:
-            route.path = base + route.path
-    _sessions = sessions
-    allroutes: Sequence[BaseRoute] = [*routes, *_routes] if routes else _routes
+        mount = Mount(base, routes=_routes)
+        allroutes: Sequence[BaseRoute] = [*routes, mount] if routes else [mount]
+    else:
+        allroutes: Sequence[BaseRoute] = [*routes, *_routes] if routes else _routes
     return Starlette(
         routes=allroutes,
         debug=debug,
